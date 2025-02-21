@@ -16,6 +16,7 @@ let departuresByMinute = Array.from({ length: 1440 }, () => []);
 let arrivalsByMinute = Array.from({ length: 1440 }, () => []);
 let circles;
 let radiusScale;
+let stationFlow;
 
 // Returns minutes since midnight.
 function minutesSinceMidnight(date) {
@@ -54,6 +55,7 @@ function updateStationsAndCircles() {
   });
   radiusScale.domain([0, d3.max(stations, d => d.totalTraffic)]);
   circles.attr('r', d => radiusScale(d.totalTraffic))
+         .style("--departure-ratio", d => stationFlow(d.departures / d.totalTraffic)) 
          .select('title')
          .text(d => `${d.totalTraffic} trips (${d.departures} departures, ${d.arrivals} arrivals)`);
 }
@@ -86,6 +88,9 @@ map.on('load', () => {
       radiusScale = d3.scaleSqrt()
                       .domain([0, d3.max(stations, d => d.totalTraffic)])
                       .range([0, 25]);
+      stationFlow = d3.scaleQuantize()
+                      .domain([0,1])
+                      .range([0, 0.5, 1]);
       circles = svg.selectAll('circle')
                    .data(stations)
                    .enter()
@@ -95,6 +100,7 @@ map.on('load', () => {
                    .attr('stroke', 'white')
                    .attr('stroke-width', 1)
                    .attr('opacity', 0.6)
+                   .style("--departure-ratio", d => stationFlow(d.departures / d.totalTraffic))
                    .each(function(d) {
                      d3.select(this)
                        .append('title')
