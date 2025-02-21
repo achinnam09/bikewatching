@@ -17,6 +17,36 @@ map.on('load', () => {
         const stations = jsonData.data.stations;
         console.log('Stations Array:', stations);
 
+        const svg = d3.select('#map').select('svg');
+
+        const circles = svg.selectAll('circle')
+            .data(stations)
+            .enter()
+            .append('circle')
+            .attr('r', 5)
+            .attr('fill', 'steelblue')
+            .attr('stroke', 'white')
+            .attr('stroke-width', 1)
+            .attr('opacity', 0.8);
+
+        function getCoords(station) {
+            const point = map.project([station.lon, station.lat]);
+            return {cx: point.x, cy:point.y};
+        }
+
+        function updatePositions() {
+            circles
+                .attr('cx', d => getCoords(d).cx)
+                .attr('cy', d => getCoords(d).cy);
+        }
+
+        updatePositions();
+
+        map.on('move', updatePositions);
+        map.on('zoom', updatePositions);
+        map.on('resize', updatePositions);
+        map.on('moveend', updatePositions);
+
     }).catch(error => {
         console.error('Error loading JSON:', error);
     });
@@ -53,6 +83,3 @@ map.on('load', () => {
         }
     });
 })
-
-const stations = jsonData.data.stations;
-console.log('Stations Array:', stations);
