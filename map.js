@@ -15,36 +15,6 @@ map.on('load', () => {
     d3.json(jsonurl).then((jsonData) => {
         let stations = jsonData.data.stations;
 
-        const svg = d3.select('#map').select('svg');
-
-        const circles = svg.selectAll('circle')
-            .data(stations)
-            .enter()
-            .append('circle')
-            .attr('r', 5)
-            .attr('fill', 'steelblue')
-            .attr('stroke', 'white')
-            .attr('stroke-width', 1)
-            .attr('opacity', 0.8);
-
-        function getCoords(station) {
-            const point = map.project([station.lon, station.lat]);
-            return { cx: point.x, cy: point.y };
-        }
-
-        function updatePositions() {
-            circles
-                .attr('cx', d => getCoords(d).cx)
-                .attr('cy', d => getCoords(d).cy);
-        }
-
-        updatePositions();
-
-        map.on('move', updatePositions);
-        map.on('zoom', updatePositions);
-        map.on('resize', updatePositions);
-        map.on('moveend', updatePositions);
-
         const trafficDataUrl = 'https://dsc106.com/labs/lab07/data/bluebikes-traffic-2024-03.csv';
 
         d3.csv(trafficDataUrl).then((trafficData) => {
@@ -71,6 +41,50 @@ map.on('load', () => {
             });
 
             console.log("Updated Stations with Traffic Data:", stations);
+
+            const svg = d3.select('#map').select('svg');
+
+            const radiusScale = d3
+                .scaleSqrt()
+                .domain([0, d3.max(stations, d => d.totalTraffic)])
+                .range([0, 25]);
+
+            const circles = svg.selectAll('circle')
+                .data(stations)
+                .enter()
+                .append('circle')
+                .attr('r', d => radiusScale(d.totalTraffic))
+                .attr('fill', 'steelblue')
+                .attr('stroke', 'white')
+                .attr('stroke-width', 1)
+                .attr('opacity', 0.6)
+                .each(function(d) {
+                    d3.select(this)
+                        .append('title')
+                        .text(`${d.totalTraffic} trips (${d.departures} departures, ${d.arrivals} arrivals)`);
+                });
+
+            console.log(svg.selectAll('circle title').nodes())
+            
+
+            function getCoords(station) {
+                const point = map.project([station.lon, station.lat]);
+                return { cx: point.x, cy: point.y };
+            }
+
+            function updatePositions() {
+                circles
+                    .attr('cx', d => getCoords(d).cx)
+                    .attr('cy', d => getCoords(d).cy);
+            }
+
+            updatePositions();
+
+            map.on('move', updatePositions);
+            map.on('zoom', updatePositions);
+            map.on('resize', updatePositions);
+            map.on('moveend', updatePositions);
+
         }).catch(error => {
             console.error('Error loading traffic data:', error);
         });
@@ -92,7 +106,7 @@ map.on('load', () => {
     map.addLayer({
         id: 'boston-bike-lanes',
         type:'line',
-        source: 'boston_route',
+        source:'boston_route',
         paint: {
             'line-color': '#32D400',
             'line-width': 4,
@@ -103,7 +117,7 @@ map.on('load', () => {
     map.addLayer({
         id: 'cambridge-bike-lanes',
         type:'line',
-        source: 'cambridge_route',
+        source:'cambridge_route',
         paint: {
             'line-color': '#32D400',
             'line-width': 4,
