@@ -11,11 +11,9 @@ const map = new mapboxgl.Map({
 
 map.on('load', () => {
     const jsonurl = 'https://dsc106.com/labs/lab07/data/bluebikes-stations.json';
-    d3.json(jsonurl).then((jsonData) => {
-        console.log('Loaded JSON Data:', jsonData);
 
-        const stations = jsonData.data.stations;
-        console.log('Stations Array:', stations);
+    d3.json(jsonurl).then((jsonData) => {
+        let stations = jsonData.data.stations;
 
         const svg = d3.select('#map').select('svg');
 
@@ -31,7 +29,7 @@ map.on('load', () => {
 
         function getCoords(station) {
             const point = map.project([station.lon, station.lat]);
-            return {cx: point.x, cy:point.y};
+            return { cx: point.x, cy: point.y };
         }
 
         function updatePositions() {
@@ -47,6 +45,36 @@ map.on('load', () => {
         map.on('resize', updatePositions);
         map.on('moveend', updatePositions);
 
+        const trafficDataUrl = 'https://dsc106.com/labs/lab07/data/bluebikes-traffic-2024-03.csv';
+
+        d3.csv(trafficDataUrl).then((trafficData) => {
+            let trips = trafficData;
+
+            const departures = d3.rollup(
+                trips,
+                (v) => v.length,
+                (d) => d.start_station_id
+            );
+
+            const arrivals = d3.rollup(
+                trips,
+                (v) => v.length,
+                (d) => d.end_station_id
+            );
+
+            stations = stations.map((station) => {
+                let id = station.short_name;
+                station.arrivals = arrivals.get(id) ?? 0;
+                station.departures = departures.get(id) ?? 0;
+                station.totalTraffic = station.arrivals + station.departures;
+                return station;
+            });
+
+            console.log("Updated Stations with Traffic Data:", stations);
+        }).catch(error => {
+            console.error('Error loading traffic data:', error);
+        });
+
     }).catch(error => {
         console.error('Error loading JSON:', error);
     });
@@ -59,7 +87,7 @@ map.on('load', () => {
     map.addSource('cambridge_route', {
         type: 'geojson',
         data: 'https://raw.githubusercontent.com/cambridgegis/cambridgegis_data/main/Recreation/Bike_Facilities/RECREATION_BikeFacilities.geojson?...'
-    })
+    });
 
     map.addLayer({
         id: 'boston-bike-lanes',
@@ -82,4 +110,4 @@ map.on('load', () => {
             'line-opacity': 0.5
         }
     });
-})
+});
