@@ -6,47 +6,60 @@ html, body {
     display: flex;
     flex-direction: column;
     align-items: center;
-}
-
-header {
+  }
+  
+  header {
     display: flex;
     justify-content: space-between;
     align-items: baseline;
     width: 100%;
     padding: 10px 20px;
-}
-
-.filter-container {
+  }
+  
+  .filter-container {
     display: flex;
-    align-items: baseline;
+    align-items: flex-start;  /* Align label with the top of the slider */
     gap: 1em;
     margin-left: auto;
-}
-
-#map {
+  }
+  
+  .slider-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 0.25em;
+  }
+  
+  .time-display {
+    text-align: right;
+  }
+  
+  #map {
     width: 100%;
     height: 100%;
     box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
     border-radius: 8px;
-}
-
-#map svg {
+    position: relative;
+  }
+  
+  #map svg {
     position: absolute;
     z-index: 1;
     width: 100%;
     height: 100%;
     pointer-events: none;
-}
-
-circle {
+  }
+  
+  circle {
     pointer-events: auto;
-}
-
-time, em {
+  }
+  
+  time, em {
     display: block;
-}
-
-em {
+  }
+  
+  em {
     color: gray;
     font-style: italic;
-}
+  }
+  
